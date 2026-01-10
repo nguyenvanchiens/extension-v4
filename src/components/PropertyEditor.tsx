@@ -7,6 +7,14 @@ interface Props {
   onChange: (properties: PropertyDefinition[]) => void;
 }
 
+// Convert snake_case to PascalCase
+function snakeToPascal(str: string): string {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+}
+
 // Map SQL types to C# types
 function sqlTypeToCSharp(sqlType: string, isNullable: boolean): CSharpType {
   const type = sqlType.toLowerCase();
@@ -40,6 +48,9 @@ function sqlTypeToCSharp(sqlType: string, isNullable: boolean): CSharpType {
 }
 
 // Parse database schema text
+// Supports 2 formats:
+// 1. Ctrl+A (full): Name, Type, Length, Decimals, NotNull (0/-1), ... (many columns)
+// 2. Simple: Name, Type, Length, Decimals, NotNull (True/False)
 function parseDbSchema(text: string): PropertyDefinition[] {
   const lines = text.trim().split('\n').filter(line => line.trim());
   const properties: PropertyDefinition[] = [];
@@ -50,14 +61,30 @@ function parseDbSchema(text: string): PropertyDefinition[] {
       continue;
     }
 
-    // Split by tab or multiple spaces
-    const parts = line.split(/\t+|\s{2,}/).map(p => p.trim()).filter(p => p);
+    // Split by tab (keep empty values to preserve column positions)
+    const parts = line.split('\t').map(p => p.trim());
 
     if (parts.length >= 2) {
-      const name = parts[0];
+      const rawName = parts[0];
       const sqlType = parts[1];
-      // Check if "Not null" column exists and is true, or check for 0/1 pattern
-      const isNotNull = parts.length > 3 ? parts[4] === '1' || parts[4]?.toLowerCase() === 'true' : false;
+
+      // Convert snake_case to PascalCase (e.g., supplier_code -> SupplierCode)
+      const name = snakeToPascal(rawName);
+
+      // Column index 4 is "Not null" / "Nullable"
+      // Format 1 (Ctrl+A): -1 = nullable, 0 = NOT NULL (required)
+      // Format 2 (Simple): True = NOT NULL (required), False = nullable
+      let isNotNull = false;
+      if (parts.length > 4) {
+        const notNullValue = parts[4];
+        // Handle both formats:
+        // 0 = NOT NULL (required)
+        // -1 = nullable
+        // "True" = NOT NULL (required)
+        // "False" = nullable
+        isNotNull = notNullValue === '0' ||
+                    notNullValue.toLowerCase() === 'true';
+      }
       const isNullable = !isNotNull;
 
       properties.push({
@@ -131,12 +158,12 @@ export function PropertyEditor({ properties, onChange }: Props) {
       {showImport && (
         <div className="bg-gray-700 rounded-lg p-4 space-y-3">
           <div className="text-sm text-gray-300">
-            Paste database schema (tab-separated: Name, Type, Length, Decimals, Not null):
+            Paste database schema (Name, Type, Length, Decimals, Not null, Virtual, Key, Comment):
           </div>
           <textarea
             value={importText}
             onChange={(e) => setImportText(e.target.value)}
-            placeholder={`Id\tvarchar\t64\t0\nCode\tvarchar\t32\t0\nStatus\tint\t0\t0\nCreatedTime\tdatetime\t0\t0`}
+            placeholder={`Id\tvarchar\t64\t0\t1\t0\tPRI\nCode\tvarchar\t32\t0\t0\t0\t\nStatus\tint\t0\t0\t1\t0\t\nCreatedTime\tdatetime\t0\t0\t0\t0\t`}
             className="w-full h-40 bg-gray-800 border border-gray-600 rounded px-3 py-2 text-sm font-mono focus:border-purple-500 focus:outline-none"
           />
           <div className="flex items-center gap-2">

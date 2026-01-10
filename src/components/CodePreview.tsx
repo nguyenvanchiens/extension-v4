@@ -42,7 +42,7 @@ export function CodePreview({ code, fileName }: Props) {
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre
             className={`${className} p-4 overflow-auto text-sm`}
-            style={{ ...style, margin: 0, maxHeight: '500px' }}
+            style={{ ...style, margin: 0, maxHeight: 'calc(100vh - 300px)' }}
           >
             {tokens.map((line, i) => (
               <div key={i} {...getLineProps({ line })}>

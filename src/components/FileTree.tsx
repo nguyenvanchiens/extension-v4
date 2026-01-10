@@ -50,7 +50,7 @@ export function FileTree({ files, selectedFile, onSelectFile }: Props) {
         </h3>
       </div>
 
-      <div className="p-2 max-h-[500px] overflow-auto">
+      <div className="p-2 max-h-[calc(100vh-300px)] overflow-auto">
         {categories.map((category) => (
           <div key={category} className="mb-3">
             <div className="flex items-center gap-2 px-2 py-1 text-sm font-medium text-gray-400">
