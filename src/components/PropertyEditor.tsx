@@ -7,8 +7,13 @@ interface Props {
   onChange: (properties: PropertyDefinition[]) => void;
 }
 
-// Convert snake_case to PascalCase
+// Convert snake_case to PascalCase, but preserve existing PascalCase/camelCase
 function snakeToPascal(str: string): string {
+  // If no underscore, just ensure first letter is uppercase (preserve rest as-is)
+  if (!str.includes('_')) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+  // Has underscore: convert snake_case to PascalCase
   return str
     .split('_')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
