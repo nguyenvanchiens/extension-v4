@@ -1,4 +1,4 @@
-import { EntityConfig, EndpointType, GeneratedFile, PropertyDefinition } from '../types';
+import { EntityConfig, EndpointType, GeneratedFile, IdType, PropertyDefinition } from '../types';
 
 // Audit fields that should be excluded from validation
 const AUDIT_FIELDS = [
@@ -63,7 +63,7 @@ function generateEndpoint(
       files.push({
         path: basePath,
         fileName: `AdminUpdate${entityName}RequestValidator.cs`,
-        content: generateUpdateValidator(moduleName, entityName, filterAuditFields(config.properties)),
+        content: generateUpdateValidator(moduleName, entityName, config.idType, filterAuditFields(config.properties)),
         category: 'Endpoint',
       });
       break;
@@ -78,7 +78,7 @@ function generateEndpoint(
       files.push({
         path: basePath,
         fileName: `AdminDelete${entityName}RequestValidator.cs`,
-        content: generateDeleteValidator(moduleName, entityName),
+        content: generateDeleteValidator(moduleName, entityName, config.idType),
         category: 'Endpoint',
       });
       break;
@@ -93,7 +93,7 @@ function generateEndpoint(
       files.push({
         path: basePath,
         fileName: `AdminGet${entityName}ByIdRequestValidator.cs`,
-        content: generateGetByIdValidator(moduleName, entityName),
+        content: generateGetByIdValidator(moduleName, entityName, config.idType),
         category: 'Endpoint',
       });
       break;
@@ -367,7 +367,18 @@ ${rules || '        // Add validation rules here'}
 `;
 }
 
-function generateUpdateValidator(moduleName: string, entityName: string, properties: PropertyDef[]): string {
+function getIdValidationRule(idType: IdType): string {
+  switch (idType) {
+    case 'long':
+      return 'RuleFor(x => x.Id).GreaterThan(0).WithMessage("Id is required.");';
+    case 'string':
+      return 'RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required.");';
+    case 'Guid':
+      return 'RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required.");';
+  }
+}
+
+function generateUpdateValidator(moduleName: string, entityName: string, idType: IdType, properties: PropertyDef[]): string {
   const rules = properties
     .filter(p => p.isRequired || p.maxLength)
     .map(p => {
@@ -397,14 +408,14 @@ public class AdminUpdate${entityName}RequestValidator : Validator<Update${entity
 {
     public AdminUpdate${entityName}RequestValidator()
     {
-        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Id is required.");
+        ${getIdValidationRule(idType)}
 ${rules ? '\n' + rules : ''}
     }
 }
 `;
 }
 
-function generateDeleteValidator(moduleName: string, entityName: string): string {
+function generateDeleteValidator(moduleName: string, entityName: string, idType: IdType): string {
   return `using FastEndpoints;
 using Fastlink.${moduleName}.Shared.Requests;
 using FluentValidation;
@@ -415,13 +426,13 @@ public class AdminDelete${entityName}RequestValidator : Validator<Delete${entity
 {
     public AdminDelete${entityName}RequestValidator()
     {
-        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Id is required.");
+        ${getIdValidationRule(idType)}
     }
 }
 `;
 }
 
-function generateGetByIdValidator(moduleName: string, entityName: string): string {
+function generateGetByIdValidator(moduleName: string, entityName: string, idType: IdType): string {
   return `using FastEndpoints;
 using Fastlink.${moduleName}.Shared.Requests;
 using FluentValidation;
@@ -432,7 +443,7 @@ public class AdminGet${entityName}ByIdRequestValidator : Validator<Get${entityNa
 {
     public AdminGet${entityName}ByIdRequestValidator()
     {
-        RuleFor(x => x.Id).GreaterThan(0).WithMessage("Id is required.");
+        ${getIdValidationRule(idType)}
     }
 }
 `;

@@ -11,12 +11,20 @@ import {
   EndpointType,
   GeneratedFile,
   ENDPOINT_TYPES,
+  IdType,
 } from '../types';
+
+const ID_TYPES: { value: IdType; label: string }[] = [
+  { value: 'long', label: 'long' },
+  { value: 'string', label: 'string' },
+  { value: 'Guid', label: 'Guid' },
+];
 
 const defaultConfig: EntityConfig = {
   moduleName: 'Portal',
   entityName: '',
   properties: [],
+  idType: 'long',
   hasActivityLog: true,
   hasCanUpdated: true,
   hasSoftDelete: true,
@@ -147,7 +155,7 @@ export function CodeGeneratorPage() {
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm text-gray-400 mb-1">
                           Module Name
@@ -182,6 +190,28 @@ export function CodeGeneratorPage() {
                           placeholder="Article"
                           className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm text-gray-400 mb-1">
+                          Id Type
+                        </label>
+                        <select
+                          value={config.idType}
+                          onChange={(e) =>
+                            setConfig((prev) => ({
+                              ...prev,
+                              idType: e.target.value as IdType,
+                            }))
+                          }
+                          className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        >
+                          {ID_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
 

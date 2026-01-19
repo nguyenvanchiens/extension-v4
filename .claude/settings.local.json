@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git checkout:*)",
       "Bash(git restore:*)",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

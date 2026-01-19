@@ -25,10 +25,13 @@ export interface PropertyDefinition {
   description?: string;
 }
 
+export type IdType = 'long' | 'string' | 'Guid';
+
 export interface EntityConfig {
   moduleName: string;        // e.g., "Portal"
   entityName: string;        // e.g., "Article"
   properties: PropertyDefinition[];
+  idType: IdType;            // Type of Id field (long, string, Guid)
   hasActivityLog: boolean;
   hasCanUpdated: boolean;    // ICanUpdated - UpdatedTime, UpdatedUser
   hasSoftDelete: boolean;    // ICanDeleted - IsDeleted, DeletedTime, DeletedUser

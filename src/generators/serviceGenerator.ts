@@ -1,7 +1,7 @@
 import { EntityConfig, GeneratedFile } from '../types';
 
 export function generateService(config: EntityConfig): GeneratedFile {
-  const { moduleName, entityName, properties, hasSoftDelete, generateEndpoints } = config;
+  const { moduleName, entityName, properties, idType, hasSoftDelete, generateEndpoints } = config;
 
   const entityNameLower = entityName.charAt(0).toLowerCase() + entityName.slice(1);
 
@@ -10,7 +10,7 @@ export function generateService(config: EntityConfig): GeneratedFile {
 
   if (generateEndpoints.includes('Create')) {
     methods.push(`
-    public async Task<BusinessResult<long>> Create${entityName}Async(Create${entityName}Request request, string createdUser)
+    public async Task<BusinessResult<${idType}>> Create${entityName}Async(Create${entityName}Request request, string createdUser)
     {
         string msg;
         try
@@ -24,20 +24,20 @@ export function generateService(config: EntityConfig): GeneratedFile {
 
             _logger.LogInformation("Created ${entityName} with Id: {Id}", entity.Id);
 
-            return BusinessResult<long>.Success(entity.Id);
+            return BusinessResult<${idType}>.Success(entity.Id);
         }
         catch (Exception ex)
         {
             msg = $"Unhandled exception: {nameof(Create${entityName}Async)}";
             _logger.LogError(ex, msg);
-            return BusinessResult<long>.Error(msg);
+            return BusinessResult<${idType}>.Error(msg);
         }
     }`);
   }
 
   if (generateEndpoints.includes('Update')) {
     methods.push(`
-    public async Task<BusinessResult> Update${entityName}Async(long id, Update${entityName}Request request, string updatedUser)
+    public async Task<BusinessResult> Update${entityName}Async(${idType} id, Update${entityName}Request request, string updatedUser)
     {
         string msg;
         try
@@ -76,7 +76,7 @@ export function generateService(config: EntityConfig): GeneratedFile {
       : `_${entityNameLower}Repository.Delete(entity);`;
 
     methods.push(`
-    public async Task<BusinessResult> Delete${entityName}Async(long id, string deletedUser)
+    public async Task<BusinessResult> Delete${entityName}Async(${idType} id, string deletedUser)
     {
         string msg;
         try
@@ -103,7 +103,7 @@ export function generateService(config: EntityConfig): GeneratedFile {
 
   if (generateEndpoints.includes('GetById')) {
     methods.push(`
-    public async Task<BusinessResult<${entityName}Model>> Get${entityName}ByIdAsync(long id)
+    public async Task<BusinessResult<${entityName}Model>> Get${entityName}ByIdAsync(${idType} id)
     {
         string msg;
         try

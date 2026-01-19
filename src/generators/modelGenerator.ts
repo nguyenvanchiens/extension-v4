@@ -52,7 +52,7 @@ export function generateModels(config: EntityConfig): GeneratedFile[] {
 }
 
 function generateMainModel(config: EntityConfig): GeneratedFile {
-  const { moduleName, entityName, properties, hasCanUpdated, hasSoftDelete } = config;
+  const { moduleName, entityName, properties, idType, hasCanUpdated, hasSoftDelete } = config;
 
   // Filter out audit fields to avoid duplicates
   const filteredProps = filterAuditFields(properties);
@@ -78,11 +78,12 @@ function generateMainModel(config: EntityConfig): GeneratedFile {
     auditProps.push('    public string? DeletedUser { get; set; }');
   }
 
+  const idDefault = idType === 'string' ? ' = string.Empty;' : '';
   const content = `namespace Fastlink.${moduleName}.Shared.Models;
 
 public class ${entityName}Model
 {
-    public long Id { get; set; }
+    public ${idType} Id { get; set; }${idDefault}
 ${propsCode}
 ${auditProps.join('\n')}
 }
@@ -123,7 +124,7 @@ ${propsCode}
 }
 
 function generateUpdateRequest(config: EntityConfig): GeneratedFile {
-  const { moduleName, entityName, properties } = config;
+  const { moduleName, entityName, properties, idType } = config;
 
   // Filter out audit fields from Update request
   const filteredProps = filterAuditFields(properties);
@@ -132,11 +133,12 @@ function generateUpdateRequest(config: EntityConfig): GeneratedFile {
     .map(prop => `    public ${prop.type} ${prop.name} { get; set; }${prop.type === 'string' ? ' = string.Empty;' : ''}`)
     .join('\n');
 
+  const idDefault = idType === 'string' ? ' = string.Empty;' : '';
   const content = `namespace Fastlink.${moduleName}.Shared.Requests;
 
 public class Update${entityName}Request
 {
-    public long Id { get; set; }
+    public ${idType} Id { get; set; }${idDefault}
 ${propsCode}
 }
 `;
@@ -150,13 +152,14 @@ ${propsCode}
 }
 
 function generateDeleteRequest(config: EntityConfig): GeneratedFile {
-  const { moduleName, entityName } = config;
+  const { moduleName, entityName, idType } = config;
 
+  const idDefault = idType === 'string' ? ' = string.Empty;' : '';
   const content = `namespace Fastlink.${moduleName}.Shared.Requests;
 
 public class Delete${entityName}Request
 {
-    public long Id { get; set; }
+    public ${idType} Id { get; set; }${idDefault}
 }
 `;
 
@@ -169,13 +172,14 @@ public class Delete${entityName}Request
 }
 
 function generateGetByIdRequest(config: EntityConfig): GeneratedFile {
-  const { moduleName, entityName } = config;
+  const { moduleName, entityName, idType } = config;
 
+  const idDefault = idType === 'string' ? ' = string.Empty;' : '';
   const content = `namespace Fastlink.${moduleName}.Shared.Requests;
 
 public class Get${entityName}ByIdRequest
 {
-    public long Id { get; set; }
+    public ${idType} Id { get; set; }${idDefault}
 }
 `;
 
